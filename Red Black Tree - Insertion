@@ -1,0 +1,191 @@
+#Romika Chaudhary
+#C0921918
+#April 9, 2024
+#Assignment 4
+
+class Node:
+    def __init__(self, key=None, color=None):
+        self.key = key
+        self.color = color  # 'R' or 'B'
+        self.left = None
+        self.right = None
+        self.parent = None
+
+
+class RedBlackTree:
+    def __init__(self):
+        self.root = None
+        self.size = 0
+
+    def insertVal(self, key):
+        self.insert(None, key)
+
+    def insert(self, pointer, key):
+        #case 0: root (tree is empty)
+        if self.root is None:
+            self.root = Node(key, 'B')
+        else:
+            #None is an initial insert call
+            if pointer is None:  
+                parentNode, childNode = self.findInsertPoint(key, self.root)
+                #Recursive call case
+            else:  
+                childNode = pointer
+                parentNode = pointer.parent
+
+            if parentNode.parent is not None:
+                if key < self.root.key:  
+                    uncleNode = parentNode.parent.right
+                else:  
+                    uncleNode = parentNode.parent.left
+
+                #case 1: uncle is red
+                if uncleNode is not None and uncleNode.color == 'R':  
+                    self.redUncleCase(childNode, uncleNode)
+                #case 2 subcases: uncle is black
+                else:  
+                    #case 2.1: RR_Case
+                    if key > self.root.key and parentNode.color == 'R' and parentNode.right is not None and \
+                            parentNode.right.color == 'R':  
+                        self.RightRightCase(childNode, uncleNode)
+                        #case 2.2: LL_Case
+                    elif key < self.root.key and parentNode.color == 'R' and parentNode.left is not None and \
+                            parentNode.left.color == 'R':  
+                        self.LeftLeftCase(childNode, uncleNode)
+                        #case 2.3: RL_Case
+                    elif key > self.root.key and parentNode.color == 'R' and parentNode.left is not None and \
+                            parentNode.left.color == 'R':  
+                        self.RightLeftCase(childNode, uncleNode)
+                        #case 2.3: LR_Case
+                    elif key < self.root.key and parentNode.color == 'R' and parentNode.right is not None and \
+                            parentNode.right.color == 'R':  
+                        self.LeftRightCase(childNode, uncleNode)
+
+                if parentNode.parent.parent is not None and parentNode.parent.color == 'R' and \
+                        parentNode.parent.parent.color == 'R':
+                    self.insert(parentNode.parent, parentNode.parent.key)
+
+            if pointer is None:
+                self.size += 1
+
+            if self.root.color != 'B':
+                self.root.color = 'B'
+
+    def redUncleCase(self, childNode, uncleNode):
+        parentNode = childNode.parent
+        grandparentNode = parentNode.parent
+
+        #Recoloring case
+        parentNode.color = 'B'
+        uncleNode.color = 'B'
+        grandparentNode.color = 'R'
+
+    def RightRightCase(self, childNode, uncleNode):
+        parentNode = childNode.parent
+        grandparentNode = parentNode.parent
+
+        #Right rotation
+        grandparentNode.parent.right = parentNode
+        grandparentNode.left = None
+        parentNode.parent = grandparentNode.parent
+        parentNode.left = grandparentNode
+        grandparentNode.parent = parentNode
+
+        grandparentNode.color = 'R'
+        parentNode.color = 'B'
+
+    def RightLeftCase(self, childNode, uncleNode):
+        parentNode = childNode.parent
+        grandparentNode = parentNode.parent
+
+        #Right rotation then left rotation
+        grandparentNode.right = childNode
+        childNode.parent = grandparentNode
+        childNode.right = parentNode
+        parentNode.parent = childNode
+
+        parentNode.left = None
+
+        self.RightRightCase(parentNode, grandparentNode.parent.left)
+
+    def LeftLeftCase(self, childNode, uncleNode):
+        parentNode = childNode.parent
+        grandparentNode = parentNode.parent
+
+        #Left rotation
+        grandparentNode.parent.left = parentNode
+        grandparentNode.left = None
+        parentNode.parent = grandparentNode.parent
+        parentNode.right = grandparentNode
+        grandparentNode.parent = parentNode
+
+        grandparentNode.color = 'R'
+        parentNode.color = 'B'
+
+    def LeftRightCase(self, childNode, uncleNode):
+        parentNode = childNode.parent
+        grandparentNode = parentNode.parent
+
+        #Left rotation then right rotation
+        grandparentNode.left = childNode
+        childNode.parent = grandparentNode
+        childNode.left = parentNode
+        parentNode.parent = childNode
+
+        parentNode.right = None
+
+        self.LeftLeftCase(parentNode, grandparentNode.parent.right)
+
+    def findInsertPoint(self, key, node):
+        precursor = None
+        cursor = self.root
+
+        while cursor is not None:
+            precursor = cursor
+            if key > cursor.key:
+                cursor = cursor.right
+            else:
+                cursor = cursor.left
+
+        child = None
+        if key > precursor.key:
+            child = precursor.right = Node(key, 'R')
+            precursor.right.parent = precursor
+        else:
+            child = precursor.left = Node(key, 'R')
+            precursor.left.parent = precursor
+
+        #return parent, child pointers
+        return precursor, child  
+
+
+#main
+rbt = RedBlackTree()
+rbt.insertVal(12)
+rbt.insertVal(8)
+rbt.insertVal(14)
+rbt.insertVal(15)
+rbt.insertVal(16)
+rbt.insertVal(6)
+rbt.insertVal(4)
+rbt.insertVal(2)
+rbt.insertVal(3)
+rbt.insertVal(20)
+rbt.insertVal(18)
+rbt.insertVal(21)
+rbt.insertVal(1)
+
+# rbt.delete(20)
+# rbt.delete(2)
+
+print(rbt.root.key, rbt.root.color, rbt.root.parent)
+print(rbt.root.left.key, rbt.root.left.color, rbt.root.left.parent.key)
+print(rbt.root.left.left.key, rbt.root.left.left.color, rbt.root.left.left.parent.key)
+print(rbt.root.left.right.key, rbt.root.left.right.color, rbt.root.left.right.parent.key)
+print(rbt.root.left.left.left.key, rbt.root.left.left.left.color, rbt.root.left.left.left.parent.key)
+print(rbt.root.left.left.right.key, rbt.root.left.left.right.color, rbt.root.left.left.right.parent.key)
+print(rbt.root.right.key, rbt.root.right.color, rbt.root.right.parent.key)
+print(rbt.root.right.left.key, rbt.root.right.left.color, rbt.root.right.left.parent.key)
+print(rbt.root.right.right.key, rbt.root.right.right.color, rbt.root.right.right.parent.key)
+print(rbt.root.right.right.left.key, rbt.root.right.right.left.color, rbt.root.right.right.left.parent.key)
+print(rbt.root.right.right.right.key, rbt.root.right.right.right.color, rbt.root.right.right.right.parent.key)
